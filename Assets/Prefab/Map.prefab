@@ -94,3 +94,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   texture: {fileID: 2800000, guid: 5170943e99593504cb906d10a2c12651, type: 3}
+  textureMask: {fileID: 2800000, guid: 90394a7820086494baac94ed072bf999, type: 3}
