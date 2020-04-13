@@ -49,6 +49,7 @@ public class DrawTest : MonoBehaviour
             }
         }
         texture.Apply();
+        invasionMassive[1000, 900] = 1;
         invasionMassive[900, 900] = 1;
 
     }
@@ -66,21 +67,41 @@ public class DrawTest : MonoBehaviour
                 }
                 if (invasionMassive[x,y] > 0)
                 {
-                    invasionMassive2[x - 1, y] += 0.5f * invasionMassive[x, y];
-                    if (invasionMassive2[x - 1, y] > 1)
-                        invasionMassive2[x - 1, y] = 1;
+                    int limit = 3;
+                    float maxDistance = new Vector2(limit, limit).magnitude;
 
-                    invasionMassive2[x , y - 1] += 0.5f * invasionMassive[x, y];
-                    if (invasionMassive2[x , y-1] > 1)
-                        invasionMassive2[x , y-1] = 1;
+                    for (int dy = -limit; dy <= limit; dy++)
+                    {
+                        for (int dx = -limit; dx <= limit; dx++)
+                        {
+                            if (dy==0 && dx==0)
+                            {
+                                invasionMassive2[x + dx, y + dy] = invasionMassive[x, y];
+                                continue;
+                            }
+                            float ranges = new Vector2(dx, dy).magnitude;
+                            float values = 0.2f * (1 - ranges / maxDistance);
+                            invasionMassive2[x + dx, y + dy] += values * invasionMassive[x, y];
+                            if (invasionMassive2[x + dx, y + dy] > 1)
+                               invasionMassive2[x + dx, y + dy] = 1;
+                        }
+                    }
 
-                    invasionMassive2[x +1, y] += 0.5f * invasionMassive[x, y];
-                    if (invasionMassive2[x + 1, y] > 1)
-                        invasionMassive2[x + 1, y] = 1;
+                    //invasionMassive2[x - 1, y] += 0.5f * invasionMassive[x, y];
+                    //if (invasionMassive2[x - 1, y] > 1)
+                    //    invasionMassive2[x - 1, y] = 1;
 
-                    invasionMassive2[x , y + 1 ] += 0.5f * invasionMassive[x, y];
-                    if (invasionMassive2[x , y + 1] > 1)
-                        invasionMassive2[x , y + 1] = 1;
+                    //invasionMassive2[x , y - 1] += 0.5f * invasionMassive[x, y];
+                    //if (invasionMassive2[x , y-1] > 1)
+                    //    invasionMassive2[x , y-1] = 1;
+
+                    //invasionMassive2[x +1, y] += 0.5f * invasionMassive[x, y];
+                    //if (invasionMassive2[x + 1, y] > 1)
+                    //    invasionMassive2[x + 1, y] = 1;
+
+                    //invasionMassive2[x , y + 1 ] += 0.5f * invasionMassive[x, y];
+                    //if (invasionMassive2[x , y + 1] > 1)
+                    //    invasionMassive2[x , y + 1] = 1;
 
 
 
@@ -88,7 +109,11 @@ public class DrawTest : MonoBehaviour
                 }
 
                 // RGBA(0.667, 0.855, 1.000, 1.000) water color (google maps)
+                //find nearby pixels
+                //find distances to pixels
+                //find infection coefficent
             }
+
         }
         
     }
@@ -113,8 +138,8 @@ public class DrawTest : MonoBehaviour
                 {
                     continue;
                 }
-                    texture.SetPixel(x, y, new Color(0.9f, 0f, invasionMassive[x,y], 0.5f));
-                invasionMassive[x,y] = invasionMassive2[x,y];s
+                    texture.SetPixel(x, y, new Color(0.9f, 0f, invasionMassive2[x,y], 0.5f));
+                invasionMassive[x,y] = invasionMassive2[x,y];
             
                 
 
