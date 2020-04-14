@@ -10,6 +10,7 @@ public class DrawTest : MonoBehaviour
     public float[,] invasionMassive;
     public float[,] invasionMassive2;
     public int[,] referenceMap;
+    public List<Vector2Int> perimeter;
     // Start is called before the first frame update
     void Start()
     {
@@ -51,9 +52,19 @@ public class DrawTest : MonoBehaviour
             }
         }
         texture.Apply();
+        SearchPerimeter();
+        DrawPerimiter();
         invasionMassive[1000, 900] = 1;
         invasionMassive[900, 900] = 1;
 
+    }
+    public void DrawPerimiter()
+    {
+        foreach(Vector2Int pixel in perimeter){
+            texture.SetPixel(pixel.x,pixel.y, new Color(0f, 0.1f, 0.8f, 1f));
+        }
+        texture.Apply();
+        //0.01.08
     }
     public void DoStep()
     {
@@ -67,7 +78,7 @@ public class DrawTest : MonoBehaviour
                 {
                     continue;
                 }
-                if (invasionMassive[x,y] > 0)
+                if (invasionMassive[x, y] > 0)
                 {
                     int limit = 1;
                     float maxDistance = new Vector2(limit, limit).magnitude;
@@ -78,7 +89,7 @@ public class DrawTest : MonoBehaviour
                         {
                             if (dy == 0 && dx == 0)
                             {
-                               // invasionMassive2[x, y] = invasionMassive[x, y];
+                                // invasionMassive2[x, y] = invasionMassive[x, y];
                                 continue;
                             }
                             else
@@ -87,7 +98,7 @@ public class DrawTest : MonoBehaviour
 
                                 float maxSquared = maxDistance * maxDistance;
                                 float distSqared = ranges * ranges * ranges;
-                                
+
 
 
                                 float values = 0.18f / distSqared;   // 1, 1.4, 2, 2.23, 2.8
@@ -102,11 +113,13 @@ public class DrawTest : MonoBehaviour
 
                                 //invasionMassive2[x  + dx, y + dy ] += values * invasionMassive[x, y];
                                 //if (invasionMassive2[x + dx, y + dy] > 1)
-                                 //   invasionMassive2[x + dx, y + dy] = 1;
+                                //   invasionMassive2[x + dx, y + dy] = 1;
                             }
-                            }
-                    }
-
+                        }
+                    } 
+                    
+                     
+                    
                     //invasionMassive2[x - 1, y] += 0.5f * invasionMassive[x, y];
                     //if (invasionMassive2[x - 1, y] > 1)
                     //    invasionMassive2[x - 1, y] = 1;
@@ -136,6 +149,44 @@ public class DrawTest : MonoBehaviour
 
         }
         
+    }
+    public void SearchPerimeter()
+    {
+        perimeter = new List<Vector2Int>();
+        for (int y = 1; y < texture.height-1; y++)
+        {
+
+
+            for (int x = 1; x < texture.width-1; x++)
+            {
+                if (referenceMap[x, y] == 0) // check water
+                {
+                    continue;
+                }
+
+
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+
+
+                        if (dy == 0 && dx == 0)
+                        {
+                            continue;
+                        }
+                        if (referenceMap[x + dx,y + dy] == 0 )
+                        {
+                            perimeter.Add(new Vector2Int(x + dx,y + dy));
+                          //  goto skipChecking;
+                        }
+                    }
+                }
+
+                //skipChecking:;
+            }
+        }
+        Debug.Log(perimeter.Count);
     }
     public void Clone()
     {
