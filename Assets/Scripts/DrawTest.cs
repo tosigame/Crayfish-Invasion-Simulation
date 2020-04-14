@@ -33,15 +33,17 @@ public class DrawTest : MonoBehaviour
                 {
                     // Debug.Log("well ya");
                     texture.SetPixel(x, y, new Color(0.9f, 0f, 1f, 1f));
-                    invasionMassive[x, y] = 0;
+                   
                     referenceMap[x,y] = 1;
 
                 }
                 else
                 {
                     referenceMap[x, y] = 0;
-                    invasionMassive[x, y] = -1;
+                    //invasionMassive[x, y] = -1;
                 }
+                invasionMassive[x, y] = 0;
+                invasionMassive2[x, y] = 0;
 
                 // RGBA(0.667, 0.855, 1.000, 1.000) water color (google maps)
 
@@ -67,24 +69,42 @@ public class DrawTest : MonoBehaviour
                 }
                 if (invasionMassive[x,y] > 0)
                 {
-                    int limit = 3;
+                    int limit = 1;
                     float maxDistance = new Vector2(limit, limit).magnitude;
 
                     for (int dy = -limit; dy <= limit; dy++)
                     {
                         for (int dx = -limit; dx <= limit; dx++)
                         {
-                            if (dy==0 && dx==0)
+                            if (dy == 0 && dx == 0)
                             {
-                                invasionMassive2[x + dx, y + dy] = invasionMassive[x, y];
+                               // invasionMassive2[x, y] = invasionMassive[x, y];
                                 continue;
                             }
-                            float ranges = new Vector2(dx, dy).magnitude;
-                            float values = 0.2f * (1 - ranges / maxDistance);
-                            invasionMassive2[x + dx, y + dy] += values * invasionMassive[x, y];
-                            if (invasionMassive2[x + dx, y + dy] > 1)
-                               invasionMassive2[x + dx, y + dy] = 1;
-                        }
+                            else
+                            {
+                                float ranges = new Vector2(dx, dy).magnitude;
+
+                                float maxSquared = maxDistance * maxDistance;
+                                float distSqared = ranges * ranges * ranges;
+                                
+
+
+                                float values = 0.18f / distSqared;   // 1, 1.4, 2, 2.23, 2.8
+
+                                float value = invasionMassive2[x + dx, y + dy];
+                                value += values * invasionMassive[x, y];
+                                if (value > 1.0) {
+                                    value = 1.0f;
+                                }
+
+                                invasionMassive2[x + dx, y + dy] = value;
+
+                                //invasionMassive2[x  + dx, y + dy ] += values * invasionMassive[x, y];
+                                //if (invasionMassive2[x + dx, y + dy] > 1)
+                                 //   invasionMassive2[x + dx, y + dy] = 1;
+                            }
+                            }
                     }
 
                     //invasionMassive2[x - 1, y] += 0.5f * invasionMassive[x, y];
@@ -139,7 +159,7 @@ public class DrawTest : MonoBehaviour
                     continue;
                 }
                     texture.SetPixel(x, y, new Color(0.9f, 0f, invasionMassive2[x,y], 0.5f));
-                invasionMassive[x,y] = invasionMassive2[x,y];
+               invasionMassive[x,y] = invasionMassive2[x,y];
             
                 
 
