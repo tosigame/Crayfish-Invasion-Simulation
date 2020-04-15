@@ -10,6 +10,7 @@ public class DrawTest : MonoBehaviour
     public float[,] invasionMassive;
     public float[,] invasionMassive2;
     public float[,] depthMap;
+    public float maxDepth = 0;
     public int[,] referenceMap;
     public List<Vector2Int> perimeter;
     // Start is called before the first frame update
@@ -39,7 +40,7 @@ public class DrawTest : MonoBehaviour
                    
                     referenceMap[x,y] = 1;
 
-                    depthMap[x,y] = FindDepth(FindMinDistance(new Vector2Int(x, y)));
+                    
                 }
                 else
                 {
@@ -58,9 +59,56 @@ public class DrawTest : MonoBehaviour
         texture.Apply();
         SearchPerimeter();
         DrawPerimiter();
-        invasionMassive[1000, 900] = 1;
-        invasionMassive[900, 900] = 1;
+        FillDepthMap();
+        DrawDepthMap();
+        invasionMassive[1350, 900] = 1;
+        invasionMassive[1380, 900] = 1;
 
+    }
+    public void FillDepthMap()
+    {
+        Vector2Int coordinates = new Vector2Int(0, 0);
+       // int count = 9999;
+        Debug.Log("ehllo world");
+        for (int y = 600; y < 900; y++)
+        {
+            for (int x = 750; x < 800; x++)
+            { 
+                if (referenceMap[x, y] == 1)
+                {
+                    coordinates.x = x;
+                    coordinates.y = y;
+                    depthMap[x, y] = FindDepth(FindMinDistance(coordinates));
+                    if (depthMap[x,y] > maxDepth)
+                    {
+                        maxDepth = depthMap[x,y];
+                    }
+                  //  count--;
+                   // if (count==0)
+                   // {
+                   //     Debug.Log("bye word");
+                   //     return;
+                   // }
+                }
+            }
+        }
+        
+    }
+    public void DrawDepthMap()
+    {
+       
+        for (int y = 600; y < 900; y++)
+        {
+            for (int x = 750; x < 800; x++)
+            {
+                if (referenceMap[x,y]==1)
+                {
+                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - depthMap[x, y] / maxDepth, 1f));
+                }
+                
+            }
+        }
+        texture.Apply();
     }
     public void DrawPerimiter()
     {
@@ -253,7 +301,7 @@ public class DrawTest : MonoBehaviour
         //{
             DoStep();
             DrawInvasion();
-            Clone();
+            DrawDepthMap();
         // }
     }
 }
