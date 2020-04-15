@@ -9,6 +9,7 @@ public class DrawTest : MonoBehaviour
     private Vector2 invasionStart = new Vector2(900f,900f);
     public float[,] invasionMassive;
     public float[,] invasionMassive2;
+    public float[,] depthMap;
     public int[,] referenceMap;
     public List<Vector2Int> perimeter;
     // Start is called before the first frame update
@@ -22,6 +23,7 @@ public class DrawTest : MonoBehaviour
         invasionMassive = new float[texture.width,texture.height];
         invasionMassive2 = new float[texture.width, texture.height];
         referenceMap = new int[texture.width, texture.height];
+        depthMap = new float[texture.width, texture.height];
         for (int y = 0; y < texture.height; y++)
         {
 
@@ -37,10 +39,12 @@ public class DrawTest : MonoBehaviour
                    
                     referenceMap[x,y] = 1;
 
+                    depthMap[x,y] = FindDepth(FindMinDistance(new Vector2Int(x, y)));
                 }
                 else
                 {
                     referenceMap[x, y] = 0;
+                    depthMap[x, y] = 0;
                     //invasionMassive[x, y] = -1;
                 }
                 invasionMassive[x, y] = 0;
@@ -149,6 +153,27 @@ public class DrawTest : MonoBehaviour
 
         }
         
+    }
+    public float FindDepth(float distance)
+    {
+        float depth;
+        depth = Mathf.Sqrt(distance);
+        return depth;
+    }
+    public float FindMinDistance(Vector2Int coordinates)
+    {
+        float minDistance=100000; 
+        foreach (Vector2Int point in perimeter)
+        {
+            float distance = Vector2Int.Distance(point, coordinates);
+          
+            if ( distance < minDistance )
+            {
+                minDistance = distance;
+
+            }
+        }
+        return minDistance;
     }
     public void SearchPerimeter()
     {
