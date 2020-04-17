@@ -1,10 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public class DrawTest : MonoBehaviour
 {
+
+    public string depthMapFile;
      public Texture2D texture;
+    public Texture2D referenceTexture;
     public Texture2D textureMask;
     private Vector2 invasionStart = new Vector2(900f,900f);
     public float[,] invasionMassive;
@@ -16,7 +21,8 @@ public class DrawTest : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        depthMapFile = "F:/Проекты/юнидестонин свитамином С/Crayfish Invasion Simulation" + "/depthMap";
+        texture = Instantiate(referenceTexture);
         // texture = GetComponent<SpriteRenderer>().sprite.texture;
         Sprite sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),Vector2.zero);
         GetComponent<SpriteRenderer>().sprite = sprite;
@@ -59,21 +65,65 @@ public class DrawTest : MonoBehaviour
         texture.Apply();
         SearchPerimeter();
         DrawPerimiter();
-        FillDepthMap();
-        DrawDepthMap();
+       
+        
         invasionMassive[1350, 900] = 1;
         invasionMassive[1380, 900] = 1;
+        if (!CheckFile())                      
+        {
+            Invoke("FillDepthMap", 3f);
+        }
+        else
+        {
+
+            LoadFile();
+            Debug.Log(depthMap[900,950]);
+            DrawDepthMap();
+        }
 
     }
-    public void FillDepthMap()
+    public bool CheckFile()
+    {
+        bool fileExist = false;
+
+        fileExist = File.Exists(depthMapFile);
+        return fileExist;
+
+    }
+    public void SaveFile()
+    {
+        Debug.Log("saving: " + depthMapFile);
+        BinaryFormatter bf = new BinaryFormatter();
+        FileStream file =  File.Create(depthMapFile);
+        bf.Serialize(file, maxDepth);
+        bf.Serialize(file, depthMap);
+        file.Close();
+
+
+    }
+    public void LoadFile()
+    {
+        Debug.Log("loading: " + depthMapFile);
+        BinaryFormatter bf = new BinaryFormatter();
+        FileStream file = File.Open(depthMapFile, FileMode.Open);
+        maxDepth = (float)bf.Deserialize(file);
+        depthMap = (float[,]) bf.Deserialize(file);
+        file.Close();
+
+    }
+    public void FillTileDepthMap(int dx,int dy)
     {
         Vector2Int coordinates = new Vector2Int(0, 0);
        // int count = 9999;
         Debug.Log("ehllo world");
-        for (int y = 600; y < 900; y++)
+        for (int y = dy; y < dy+128; y++)
         {
-            for (int x = 750; x < 800; x++)
-            { 
+            for (int x = dx; x < dx+128; x++)
+            {
+                if (y >= texture.height || x >= texture.width)
+                {
+                    return;
+                }
                 if (referenceMap[x, y] == 1)
                 {
                     coordinates.x = x;
@@ -83,24 +133,49 @@ public class DrawTest : MonoBehaviour
                     {
                         maxDepth = depthMap[x,y];
                     }
-                  //  count--;
-                   // if (count==0)
-                   // {
-                   //     Debug.Log("bye word");
-                   //     return;
-                   // }
+           
                 }
             }
         }
         
     }
+    int x1 = 0;
+    int y1 = 0;
+    public void  FillDepthMap()
+    {
+        Debug.Log("Dirty code");
+        FillTileDepthMap(x1, y1);
+        DrawDepthMap();
+               
+        
+        x1 += 128;
+        if (x1>=texture.width)
+        {
+            y1 += 128;
+            x1 = 0;
+            
+            if (y1 >= texture.height)
+            {
+                Debug.Log("Here we save the file");
+                SaveFile();                               
+                
+                return;
+            }
+            
+            
+            Debug.Log("Invoke");
+        }
+        Invoke("FillDepthMap", 0.2f);
+
+    }
     public void DrawDepthMap()
     {
        
-        for (int y = 600; y < 900; y++)
+        for (int y = 0; y < texture.height; y++)
         {
-            for (int x = 750; x < 800; x++)
+            for (int x = 0; x < texture.width; x++)
             {
+
                 if (referenceMap[x,y]==1)
                 {
                     texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - depthMap[x, y] / maxDepth, 1f));
@@ -118,6 +193,7 @@ public class DrawTest : MonoBehaviour
         texture.Apply();
         //0.01.08
     }
+    
     public void DoStep()
     {
         for (int y = 1; y < invasionMassive.GetLength(1)-1; y++)
@@ -225,6 +301,7 @@ public class DrawTest : MonoBehaviour
     }
     public void SearchPerimeter()
     {
+        int count = 0;
         perimeter = new List<Vector2Int>();
         for (int y = 1; y < texture.height-1; y++)
         {
@@ -242,15 +319,17 @@ public class DrawTest : MonoBehaviour
                 {
                     for (int dx = -1; dx <= 1; dx++)
                     {
-
-
+                        
+                       
                         if (dy == 0 && dx == 0)
                         {
                             continue;
                         }
-                        if (referenceMap[x + dx,y + dy] == 0 )
+                        count++;
+                        if (referenceMap[x + dx,y + dy] == 0 && count >= 2000 )
                         {
                             perimeter.Add(new Vector2Int(x + dx,y + dy));
+                            count = 0;
                           //  goto skipChecking;
                         }
                     }
@@ -299,8 +378,8 @@ public class DrawTest : MonoBehaviour
     {
        // if (Input.GetKeyDown(KeyCode.S))
         //{
-            DoStep();
-            DrawInvasion();
+           // DoStep();
+            //DrawInvasion();
             DrawDepthMap();
         // }
     }
