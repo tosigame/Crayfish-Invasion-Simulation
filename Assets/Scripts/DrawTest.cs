@@ -67,8 +67,8 @@ public class DrawTest : MonoBehaviour
         DrawPerimiter();
        
         
-        invasionMassive[1350, 900] = 1;
-        invasionMassive[1380, 900] = 1;
+        invasionMassive[300, 200] = 1f;
+        invasionMassive[1380, 900] = 1f;
         if (!CheckFile())                      
         {
             Invoke("FillDepthMap", 3f);
@@ -129,6 +129,7 @@ public class DrawTest : MonoBehaviour
                     coordinates.x = x;
                     coordinates.y = y;
                     depthMap[x, y] = FindDepth(FindMinDistance(coordinates));
+                    depthMap[x, y] *= depthMap[x, y];
                     if (depthMap[x,y] > maxDepth)
                     {
                         maxDepth = depthMap[x,y];
@@ -168,6 +169,7 @@ public class DrawTest : MonoBehaviour
         Invoke("FillDepthMap", 0.2f);
 
     }
+
     public void DrawDepthMap()
     {
        
@@ -185,6 +187,7 @@ public class DrawTest : MonoBehaviour
         }
         texture.Apply();
     }
+
     public void DrawPerimiter()
     {
         foreach(Vector2Int pixel in perimeter){
@@ -217,7 +220,7 @@ public class DrawTest : MonoBehaviour
                         {
                             if (dy == 0 && dx == 0)
                             {
-                                // invasionMassive2[x, y] = invasionMassive[x, y];
+                             
                                 continue;
                             }
                             else
@@ -229,61 +232,41 @@ public class DrawTest : MonoBehaviour
 
 
 
-                                float values = 0.18f / distSqared;   // 1, 1.4, 2, 2.23, 2.8
+                                float values = 0.8f / distSqared;   // 1, 1.4, 2, 2.23, 2.8
 
                                 float value = invasionMassive2[x + dx, y + dy];
                                 value += values * invasionMassive[x, y];
+                                
                                 if (value > 1.0) {
                                     value = 1.0f;
                                 }
+                                value *= 1f - (depthMap[x + dx, y + dy] / maxDepth)*0.9f ;
 
                                 invasionMassive2[x + dx, y + dy] = value;
 
-                                //invasionMassive2[x  + dx, y + dy ] += values * invasionMassive[x, y];
-                                //if (invasionMassive2[x + dx, y + dy] > 1)
-                                //   invasionMassive2[x + dx, y + dy] = 1;
+                               
                             }
                         }
                     } 
-                    
-                     
-                    
-                    //invasionMassive2[x - 1, y] += 0.5f * invasionMassive[x, y];
-                    //if (invasionMassive2[x - 1, y] > 1)
-                    //    invasionMassive2[x - 1, y] = 1;
-
-                    //invasionMassive2[x , y - 1] += 0.5f * invasionMassive[x, y];
-                    //if (invasionMassive2[x , y-1] > 1)
-                    //    invasionMassive2[x , y-1] = 1;
-
-                    //invasionMassive2[x +1, y] += 0.5f * invasionMassive[x, y];
-                    //if (invasionMassive2[x + 1, y] > 1)
-                    //    invasionMassive2[x + 1, y] = 1;
-
-                    //invasionMassive2[x , y + 1 ] += 0.5f * invasionMassive[x, y];
-                    //if (invasionMassive2[x , y + 1] > 1)
-                    //    invasionMassive2[x , y + 1] = 1;
-
-
 
 
                 }
 
                 // RGBA(0.667, 0.855, 1.000, 1.000) water color (google maps)
-                //find nearby pixels
-                //find distances to pixels
-                //find infection coefficent
+
             }
 
         }
         
     }
+
     public float FindDepth(float distance)
     {
         float depth;
         depth = Mathf.Sqrt(distance);
         return depth;
     }
+
     public float FindMinDistance(Vector2Int coordinates)
     {
         float minDistance=100000; 
@@ -299,6 +282,7 @@ public class DrawTest : MonoBehaviour
         }
         return minDistance;
     }
+
     public void SearchPerimeter()
     {
         int count = 0;
@@ -326,7 +310,7 @@ public class DrawTest : MonoBehaviour
                             continue;
                         }
                         count++;
-                        if (referenceMap[x + dx,y + dy] == 0 && count >= 2000 )
+                        if (referenceMap[x + dx,y + dy] == 0 && count >= 15 )
                         {
                             perimeter.Add(new Vector2Int(x + dx,y + dy));
                             count = 0;
@@ -340,14 +324,7 @@ public class DrawTest : MonoBehaviour
         }
         Debug.Log(perimeter.Count);
     }
-    public void Clone()
-    {
-        
-        //invasionMassive2.CopyTo(invasionMassive,0);
-        // float[,] invasionMassiveIntermediate= invasionMassive2;
-        //invasionMassive2 = invasionMassive;
-        // invasionMassive = invasionMassiveIntermediate;
-    }
+
     public void DrawInvasion()
     {
         for (int y = 0; y < texture.height; y++)
@@ -361,7 +338,15 @@ public class DrawTest : MonoBehaviour
                 {
                     continue;
                 }
-                    texture.SetPixel(x, y, new Color(0.9f, 0f, invasionMassive2[x,y], 0.5f));
+                if (invasionMassive2[x, y] == 0)
+                {
+                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - depthMap[x, y] / maxDepth, 1f));
+                }
+                else
+                {
+                    Color color = Color.HSVToRGB(invasionMassive2[x, y]*0.2f, 1.0f, 1.0f);
+                    texture.SetPixel(x, y, color);
+                }
                invasionMassive[x,y] = invasionMassive2[x,y];
             
                 
@@ -373,14 +358,13 @@ public class DrawTest : MonoBehaviour
         }
         texture.Apply();
     }
-    // Update is called once per frame
+    
     void Update()
     {
-       // if (Input.GetKeyDown(KeyCode.S))
-        //{
-           // DoStep();
-            //DrawInvasion();
-            DrawDepthMap();
-        // }
+      
+          DoStep();
+            DrawInvasion();
+            //DrawDepthMap();
+     
     }
 }
