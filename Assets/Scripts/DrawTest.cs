@@ -6,42 +6,57 @@ using UnityEngine;
 
 public class DrawTest : MonoBehaviour
 {
-
+    public class Pixel
+    {
+      public float depth;
+      public  float maxPop;
+      public float infectedPop;
+      public  float infectedPop2;
+    }
+    public Pixel[,] pixels;
     public string depthMapFile;
      public Texture2D texture;
     public Texture2D referenceTexture;
     public Texture2D textureMask;
     private Vector2 invasionStart = new Vector2(900f,900f);
-    public float[,] invasionMassive;
-    public float[,] invasionMassive2;
-    public float[,] depthMap;
+    //public float[,] invasionMassive;
+   // public float[,] invasionMassive2;
+    //public float[,] depthMap;
     public float maxDepth = 0;
     public int[,] referenceMap;
     public List<Vector2Int> perimeter;
     // Start is called before the first frame update
+    //[x,y,maxinfPop]=inf Pop
+    //max inf pop zavicit from depth map
+    //10% ot inf pop zaragaet close pixels 
+    //x+dx y+dy= random 0-0.2f * inf pop
+    //[x,y]*=2 
+    //proverka na  >maxInfpop
+
     void Start()
     {
         depthMapFile = "F:/Проекты/юнидестонин свитамином С/Crayfish Invasion Simulation" + "/depthMap";
         texture = Instantiate(referenceTexture);
-        // texture = GetComponent<SpriteRenderer>().sprite.texture;
+      
         Sprite sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),Vector2.zero);
         GetComponent<SpriteRenderer>().sprite = sprite;
         Color pixel;
-        invasionMassive = new float[texture.width,texture.height];
-        invasionMassive2 = new float[texture.width, texture.height];
+      
         referenceMap = new int[texture.width, texture.height];
-        depthMap = new float[texture.width, texture.height];
+        pixels = new Pixel[texture.width, texture.height];
+      
         for (int y = 0; y < texture.height; y++)
         {
 
 
             for (int x = 0; x < texture.width; x++)
             {
+                pixels[x, y] = new Pixel();
                 pixel = textureMask.GetPixel(x, y);
-                //Debug.Log(pixel);
+                
                 if (pixel.r > 0.665 && pixel.r < 0.67f && pixel.g > 0.85 && pixel.g < 0.86f && pixel.b == 1.000f)
                 {
-                    // Debug.Log("well ya");
+                 
                     texture.SetPixel(x, y, new Color(0.9f, 0f, 1f, 1f));
                    
                     referenceMap[x,y] = 1;
@@ -51,11 +66,11 @@ public class DrawTest : MonoBehaviour
                 else
                 {
                     referenceMap[x, y] = 0;
-                    depthMap[x, y] = 0;
-                    //invasionMassive[x, y] = -1;
+                    pixels[x, y].depth = 0;
+                   
                 }
-                invasionMassive[x, y] = 0;
-                invasionMassive2[x, y] = 0;
+                pixels[x, y].infectedPop = 0;
+                pixels[x, y].infectedPop2 = 0;
 
                 // RGBA(0.667, 0.855, 1.000, 1.000) water color (google maps)
 
@@ -65,10 +80,10 @@ public class DrawTest : MonoBehaviour
         texture.Apply();
         SearchPerimeter();
         DrawPerimiter();
-       
-        
-        invasionMassive[300, 200] = 1f;
-        invasionMassive[1380, 900] = 1f;
+
+
+        pixels[300, 400].infectedPop = 1f;
+        pixels[1380, 980].infectedPop = 1f;
         if (!CheckFile())                      
         {
             Invoke("FillDepthMap", 3f);
@@ -77,7 +92,7 @@ public class DrawTest : MonoBehaviour
         {
 
             LoadFile();
-            Debug.Log(depthMap[900,950]);
+         
             DrawDepthMap();
         }
 
@@ -92,6 +107,14 @@ public class DrawTest : MonoBehaviour
     }
     public void SaveFile()
     {
+        float[,] depthMap = new float[texture.width, texture.height];
+        for (int y = 0; y < texture.height; y++)
+        {
+            for (int x = 0; x < texture.width; x++)
+            {
+                depthMap[x, y] = pixels[x, y].depth;
+            }
+        }
         Debug.Log("saving: " + depthMapFile);
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file =  File.Create(depthMapFile);
@@ -107,9 +130,15 @@ public class DrawTest : MonoBehaviour
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file = File.Open(depthMapFile, FileMode.Open);
         maxDepth = (float)bf.Deserialize(file);
-        depthMap = (float[,]) bf.Deserialize(file);
+        float [,]depthMap = (float[,]) bf.Deserialize(file);
         file.Close();
-
+        for (int y = 0; y < texture.height; y++)
+        {
+            for (int x = 0; x <texture.width ; x++)
+            {
+                pixels[x, y].depth = depthMap[x, y];
+            }
+        }
     }
     public void FillTileDepthMap(int dx,int dy)
     {
@@ -128,11 +157,11 @@ public class DrawTest : MonoBehaviour
                 {
                     coordinates.x = x;
                     coordinates.y = y;
-                    depthMap[x, y] = FindDepth(FindMinDistance(coordinates));
-                    depthMap[x, y] *= depthMap[x, y];
-                    if (depthMap[x,y] > maxDepth)
+                    pixels[x, y].depth = FindDepth(FindMinDistance(coordinates));
+                    pixels[x, y].depth *= pixels[x, y].depth;
+                    if (pixels[x, y].depth > maxDepth)
                     {
-                        maxDepth = depthMap[x,y];
+                        maxDepth = pixels[x, y].depth;
                     }
            
                 }
@@ -180,7 +209,7 @@ public class DrawTest : MonoBehaviour
 
                 if (referenceMap[x,y]==1)
                 {
-                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - depthMap[x, y] / maxDepth, 1f));
+                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - pixels[x, y].depth / maxDepth, 1f));
                 }
                 
             }
@@ -199,26 +228,39 @@ public class DrawTest : MonoBehaviour
     
     public void DoStep()
     {
-        for (int y = 1; y < invasionMassive.GetLength(1)-1; y++)
+
+        for (int y = 1; y < texture.height-1; y++)
         {
 
 
-            for (int x = 1; x < invasionMassive.GetLength(0)-1; x++)
+            for (int x = 1; x < texture.width-1; x++)
             {
                 if (referenceMap[x,y] == 0)
                 {
                     continue;
                 }
-                if (invasionMassive[x, y] > 0)
+                if (pixels[x, y].infectedPop > 0)
                 {
+                    pixels[x, y].infectedPop *= 1.1f;
+                    if (pixels[x, y].infectedPop > 1)
+                    {
+                        pixels[x, y].infectedPop = 1;
+                    }
+                    pixels[x, y].infectedPop2 = pixels[x, y].infectedPop;
+
+
+                    if (pixels[x, y].infectedPop < 0.4f)       //weak pixel can not infect
+                    {
+                        continue;
+                    }
                     int limit = 1;
                     float maxDistance = new Vector2(limit, limit).magnitude;
-
+                   
                     for (int dy = -limit; dy <= limit; dy++)
                     {
                         for (int dx = -limit; dx <= limit; dx++)
                         {
-                            if (dy == 0 && dx == 0)
+                            if (dy == 0 && dx == 0 )
                             {
                              
                                 continue;
@@ -227,23 +269,14 @@ public class DrawTest : MonoBehaviour
                             {
                                 float ranges = new Vector2(dx, dy).magnitude;
 
-                                float maxSquared = maxDistance * maxDistance;
-                                float distSqared = ranges * ranges * ranges;
-
-
-
-                                float values = 0.8f / distSqared;   // 1, 1.4, 2, 2.23, 2.8
-
-                                float value = invasionMassive2[x + dx, y + dy];
-                                value += values * invasionMassive[x, y];
-                                
-                                if (value > 1.0) {
-                                    value = 1.0f;
+                               // float maxSquared = maxDistance * maxDistance;
+                               // float distSqared = ranges * ranges * ranges;
+                           
+                                if (pixels[x + dx, y + dy].infectedPop2 == 0)
+                                {
+                                    pixels[x + dx, y + dy].infectedPop2 = pixels[x, y].infectedPop * 0.1f / ranges;
                                 }
-                                value *= 1f - (depthMap[x + dx, y + dy] / maxDepth)*0.9f ;
-
-                                invasionMassive2[x + dx, y + dy] = value;
-
+                                
                                
                             }
                         }
@@ -253,7 +286,15 @@ public class DrawTest : MonoBehaviour
                 }
 
                 // RGBA(0.667, 0.855, 1.000, 1.000) water color (google maps)
+                /* //float values = 0.8f / distSqared;   // 1, 1.4, 2, 2.23, 2.8
 
+                              //
+                              //value += values * invasionMassive[x, y];
+
+                              //if (value > 1.0) {
+                              //    value = 1.0f;
+                              //}
+                              //value *= 1f - (depthMap[x + dx, y + dy] / maxDepth)*0.9f ; *///
             }
 
         }
@@ -338,16 +379,16 @@ public class DrawTest : MonoBehaviour
                 {
                     continue;
                 }
-                if (invasionMassive2[x, y] == 0)
+                if (pixels[x, y].infectedPop2 == 0)
                 {
-                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - depthMap[x, y] / maxDepth, 1f));
+                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - pixels[x, y].depth / maxDepth, 1f));
                 }
                 else
                 {
-                    Color color = Color.HSVToRGB(invasionMassive2[x, y]*0.2f, 1.0f, 1.0f);
+                    Color color = Color.HSVToRGB(pixels[x, y].infectedPop2 * 0.7f, 1.0f, 1.0f);
                     texture.SetPixel(x, y, color);
                 }
-               invasionMassive[x,y] = invasionMassive2[x,y];
+                pixels[x, y].infectedPop = pixels[x, y].infectedPop2;
             
                 
 
