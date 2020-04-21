@@ -92,10 +92,39 @@ public class DrawTest : MonoBehaviour
         {
 
             LoadFile();
-         
+            SearchMaxInfected();
             DrawDepthMap();
         }
 
+    }
+    public void SearchMaxInfected()
+    {
+        for (int y = 0; y < texture.height; y++)
+        {
+            for (int x = 0; x < texture.width; x++)
+            {
+                if (pixels[x, y].depth >= 0.01f && pixels[x,y].depth <= 2)
+                {
+                    pixels[x, y].maxPop = Random.Range(0.6f, 0.8f);
+                }
+                else if (pixels[x, y].depth > 2 && pixels[x, y].depth <= 5)
+                {
+                    pixels[x, y].maxPop = Random.Range(0.9f, 1f);
+                }
+                else if (pixels[x, y].depth > 5 && pixels[x, y].depth <= 15)
+                {
+                    pixels[x, y].maxPop = Random.Range(0.3f, 0.4f);
+                }
+                else if (pixels[x, y].depth > 15 && pixels[x, y].depth <= 30)
+                {
+                    pixels[x, y].maxPop = Random.Range(0.2f, 0.3f);
+                }
+                else
+                {
+                    pixels[x, y].maxPop = 0;
+                }
+            }
+        }
     }
     public bool CheckFile()
     {
@@ -139,6 +168,7 @@ public class DrawTest : MonoBehaviour
                 pixels[x, y].depth = depthMap[x, y];
             }
         }
+
     }
     public void FillTileDepthMap(int dx,int dy)
     {
@@ -187,8 +217,8 @@ public class DrawTest : MonoBehaviour
             if (y1 >= texture.height)
             {
                 Debug.Log("Here we save the file");
-                SaveFile();                               
-                
+                SaveFile();
+                SearchMaxInfected();
                 return;
             }
             
@@ -209,7 +239,7 @@ public class DrawTest : MonoBehaviour
 
                 if (referenceMap[x,y]==1)
                 {
-                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - pixels[x, y].depth / maxDepth, 1f));
+                    texture.SetPixel(x, y, new Color(0.2f, 0.5f,pixels[x, y].depth / maxDepth, 1f));
                 }
                 
             }
@@ -241,19 +271,29 @@ public class DrawTest : MonoBehaviour
                 }
                 if (pixels[x, y].infectedPop > 0)
                 {
-                    pixels[x, y].infectedPop *= 1.1f;
-                    if (pixels[x, y].infectedPop > 1)
-                    {
-                        pixels[x, y].infectedPop = 1;
-                    }
-                    pixels[x, y].infectedPop2 = pixels[x, y].infectedPop;
+                    //pixels[x, y].infectedPop *= 1.1f;
+                    //if (pixels[x, y].infectedPop > 1)
+                    //{
+                    //    pixels[x, y].infectedPop = 1;
+                    //}
+                    //pixels[x, y].infectedPop2 = pixels[x, y].infectedPop;
 
 
-                    if (pixels[x, y].infectedPop < 0.4f)       //weak pixel can not infect
-                    {
-                        continue;
-                    }
+                    //if (pixels[x, y].infectedPop < 0.4f)       //weak pixel can not infect
+                    //{
+                    //    continue;
+                    //}
                     int limit = 1;
+                    pixels[x, y].infectedPop *= Random.Range(1.1f, 2f);
+                    if (pixels[x, y].infectedPop > 0.8f)
+                    {
+                         limit += 2;
+                    }
+                    else if (pixels[x, y].infectedPop > 0.4f)
+                    {
+                        limit++;
+                    }
+                  
                     float maxDistance = new Vector2(limit, limit).magnitude;
                    
                     for (int dy = -limit; dy <= limit; dy++)
@@ -272,9 +312,14 @@ public class DrawTest : MonoBehaviour
                                // float maxSquared = maxDistance * maxDistance;
                                // float distSqared = ranges * ranges * ranges;
                            
-                                if (pixels[x + dx, y + dy].infectedPop2 == 0)
+                                if (pixels[x + dx, y + dy].infectedPop2 < pixels[x+dx,y+dy].maxPop)
                                 {
-                                    pixels[x + dx, y + dy].infectedPop2 = pixels[x, y].infectedPop * 0.1f / ranges;
+                                    pixels[x + dx, y + dy].infectedPop2 += (Random.Range(0, pixels[x, y].infectedPop / 10) / ranges);
+
+                                    if (pixels[x + dx ,y + dy].infectedPop2 > pixels[x + dx, y + dy].maxPop)
+                                    {
+                                        pixels[x + dx, y + dy].infectedPop2 = pixels[x + dx, y + dy].maxPop;
+                                    }
                                 }
                                 
                                
@@ -379,13 +424,13 @@ public class DrawTest : MonoBehaviour
                 {
                     continue;
                 }
-                if (pixels[x, y].infectedPop2 == 0)
+                if (pixels[x, y].infectedPop2  < 0.1f)
                 {
-                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - pixels[x, y].depth / maxDepth, 1f));
+                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - pixels[x, y].maxPop/*depth / maxDepth*/, 1f));
                 }
                 else
                 {
-                    Color color = Color.HSVToRGB(pixels[x, y].infectedPop2 * 0.7f, 1.0f, 1.0f);
+                    Color color = Color.HSVToRGB(pixels[x, y].infectedPop2 * 0.9f + 0.1f, 1.0f, 1.0f);
                     texture.SetPixel(x, y, color);
                 }
                 pixels[x, y].infectedPop = pixels[x, y].infectedPop2;
@@ -405,7 +450,7 @@ public class DrawTest : MonoBehaviour
       
           DoStep();
             DrawInvasion();
-            //DrawDepthMap();
+           // DrawDepthMap();
      
     }
 }
