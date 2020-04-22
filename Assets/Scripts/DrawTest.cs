@@ -32,7 +32,9 @@ public class DrawTest : MonoBehaviour
     //x+dx y+dy= random 0-0.2f * inf pop
     //[x,y]*=2 
     //proverka na  >maxInfpop
-
+    public float xOrg=1000;
+    public float yOrg=900;
+    public float scale = 100F;
     void Start()
     {
         depthMapFile = "F:/Проекты/юнидестонин свитамином С/Crayfish Invasion Simulation" + "/depthMap";
@@ -92,7 +94,10 @@ public class DrawTest : MonoBehaviour
         {
 
             LoadFile();
+            CalcNoise();
             SearchMaxInfected();
+            
+           
             DrawDepthMap();
         }
 
@@ -430,7 +435,8 @@ public class DrawTest : MonoBehaviour
                 }
                 else
                 {
-                    Color color = Color.HSVToRGB(pixels[x, y].infectedPop2 * 0.9f + 0.1f, 1.0f, 1.0f);
+                    Color color = Color.HSVToRGB (0.9f, 0f, 1.0f);
+                    color.a = 1-pixels[x, y].infectedPop2;
                     texture.SetPixel(x, y, color);
                 }
                 pixels[x, y].infectedPop = pixels[x, y].infectedPop2;
@@ -444,7 +450,30 @@ public class DrawTest : MonoBehaviour
         }
         texture.Apply();
     }
-    
+    void CalcNoise()
+    {
+        // For each pixel in the texture...
+        float y = 0.0F;
+
+        while (y < texture.height)
+        {
+            float x = 0.0F;
+            while (x < texture.width)
+            {
+                float xCoord = xOrg + x / texture.width * scale;
+                float yCoord = yOrg + y / texture.height * scale;
+                float sample = Mathf.PerlinNoise(xCoord, yCoord);
+                 pixels[(int)x,(int) y].depth *= sample;
+               // pix[(int)y * texture.width + (int)x] = new Color(sample, sample, sample);
+                x++;
+            }
+            y++;
+        }
+
+        //// Copy the pixel data to the texture and load it into the GPU.
+        //noiseTex.SetPixels(pix);
+        //noiseTex.Apply();
+    }
     void Update()
     {
       

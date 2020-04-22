@@ -93,8 +93,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01c1e9fbe0d22104aba47cccabc8768a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  depthMapFile: 
   texture: {fileID: 0}
   referenceTexture: {fileID: 2800000, guid: 5170943e99593504cb906d10a2c12651, type: 3}
   textureMask: {fileID: 2800000, guid: 21fe2f8dc488c784a86fe11d99c740c2, type: 3}
   maxDepth: 0
   perimeter: []
+  xOrg: 900
+  yOrg: 900
+  scale: 100
