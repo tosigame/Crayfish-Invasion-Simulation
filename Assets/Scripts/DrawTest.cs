@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine.UI;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
@@ -35,8 +36,13 @@ public class DrawTest : MonoBehaviour
     public float xOrg=1000;
     public float yOrg=900;
     public float scale = 100F;
+    protected bool flagDoStep = false;
+
+   
     void Start()
     {
+       
+        
         depthMapFile = "F:/Проекты/юнидестонин свитамином С/Crayfish Invasion Simulation" + "/depthMap";
         texture = Instantiate(referenceTexture);
       
@@ -84,8 +90,7 @@ public class DrawTest : MonoBehaviour
         DrawPerimiter();
 
 
-        pixels[300, 400].infectedPop = 1f;
-        pixels[1380, 980].infectedPop = 1f;
+       
         if (!CheckFile())                      
         {
             Invoke("FillDepthMap", 3f);
@@ -99,11 +104,24 @@ public class DrawTest : MonoBehaviour
             
            
             DrawDepthMap();
+            
+           
         }
 
     }
+  
+    public void ButtonStart()
+    {
+        
+         GameObject settingPanel = GameObject.Find("SettingPanel");
+        settingPanel.gameObject.SetActive(false);
+        GameObject.Find("Map").GetComponent<DrawTest>().ChangeFlag();
+        Debug.Log(flagDoStep);
+    }
+    
     public void SearchMaxInfected()
     {
+        float maxMaxPop = 0;
         for (int y = 0; y < texture.height; y++)
         {
             for (int x = 0; x < texture.width; x++)
@@ -128,8 +146,13 @@ public class DrawTest : MonoBehaviour
                 {
                     pixels[x, y].maxPop = 0;
                 }
+                if (maxMaxPop < pixels[x, y].maxPop)
+                {
+                    maxMaxPop = pixels[x, y].maxPop;
+                }
             }
         }
+        Debug.Log(maxMaxPop);
     }
     public bool CheckFile()
     {
@@ -261,9 +284,22 @@ public class DrawTest : MonoBehaviour
         //0.01.08
     }
     
+    public void ChangeFlag()
+    {
+        flagDoStep = true;
+        pixels[300, 400].infectedPop = 1f;
+        pixels[1380, 980].infectedPop = 1f;
+    }
+
     public void DoStep()
     {
-
+        Debug.Log(flagDoStep);
+        //if (flagDoStep==false)
+        //{
+        //    Debug.Log("Nah");
+        //    return;
+        //}
+        //Debug.Log("Yahh");
         for (int y = 1; y < texture.height-1; y++)
         {
 
@@ -437,9 +473,14 @@ public class DrawTest : MonoBehaviour
                 {
                     Color color = Color.HSVToRGB (0.9f, 0f, 1.0f);
                     color.a = 1-pixels[x, y].infectedPop2;
+                    color.r = pixels[x, y].infectedPop;
+                    color.g = pixels[x, y].maxPop;
                     texture.SetPixel(x, y, color);
                 }
-                pixels[x, y].infectedPop = pixels[x, y].infectedPop2;
+                
+                    pixels[x, y].infectedPop = pixels[x, y].infectedPop2;
+                
+                
             
                 
 
@@ -476,10 +517,14 @@ public class DrawTest : MonoBehaviour
     }
     void Update()
     {
-      
-          DoStep();
-            DrawInvasion();
-           // DrawDepthMap();
-     
+        if (flagDoStep)
+        {
+            DoStep();
+
+        }
+        DrawInvasion();
+
+        // DrawDepthMap();
+
     }
 }

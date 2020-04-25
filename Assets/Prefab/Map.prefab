@@ -70,7 +70,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 5170943e99593504cb906d10a2c12651, type: 3}
+  m_Sprite: {fileID: 21300000, guid: baf6c02285918ef46ad16730b7c99621, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -95,10 +95,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   depthMapFile: 
   texture: {fileID: 0}
-  referenceTexture: {fileID: 2800000, guid: 5170943e99593504cb906d10a2c12651, type: 3}
-  textureMask: {fileID: 2800000, guid: 21fe2f8dc488c784a86fe11d99c740c2, type: 3}
+  referenceTexture: {fileID: 2800000, guid: b2511c2a8295d9c4ba5a219c4e242711, type: 3}
+  textureMask: {fileID: 2800000, guid: b2511c2a8295d9c4ba5a219c4e242711, type: 3}
   maxDepth: 0
   perimeter: []
-  xOrg: 900
+  xOrg: 1000
   yOrg: 900
   scale: 100
