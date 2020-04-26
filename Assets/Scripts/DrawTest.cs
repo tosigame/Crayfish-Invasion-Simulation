@@ -4,8 +4,9 @@ using System.IO;
 using UnityEngine.UI;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using UnityEngine.Events;
 
-public class DrawTest : MonoBehaviour
+public partial class DrawTest : MonoBehaviour
 {
     public class Pixel
     {
@@ -13,6 +14,7 @@ public class DrawTest : MonoBehaviour
       public  float maxPop;
       public float infectedPop;
       public  float infectedPop2;
+        public bool flagIgnore = false;
     }
     public Pixel[,] pixels;
     public string depthMapFile;
@@ -20,19 +22,9 @@ public class DrawTest : MonoBehaviour
     public Texture2D referenceTexture;
     public Texture2D textureMask;
     private Vector2 invasionStart = new Vector2(900f,900f);
-    //public float[,] invasionMassive;
-   // public float[,] invasionMassive2;
-    //public float[,] depthMap;
     public float maxDepth = 0;
     public int[,] referenceMap;
     public List<Vector2Int> perimeter;
-    // Start is called before the first frame update
-    //[x,y,maxinfPop]=inf Pop
-    //max inf pop zavicit from depth map
-    //10% ot inf pop zaragaet close pixels 
-    //x+dx y+dy= random 0-0.2f * inf pop
-    //[x,y]*=2 
-    //proverka na  >maxInfpop
     public float xOrg=1000;
     public float yOrg=900;
     public float scale = 100F;
@@ -256,34 +248,6 @@ public class DrawTest : MonoBehaviour
         Invoke("FillDepthMap", 0.2f);
 
     }
-
-    public void DrawDepthMap()
-    {
-       
-        for (int y = 0; y < texture.height; y++)
-        {
-            for (int x = 0; x < texture.width; x++)
-            {
-
-                if (referenceMap[x,y]==1)
-                {
-                    texture.SetPixel(x, y, new Color(0.2f, 0.5f,pixels[x, y].depth / maxDepth, 1f));
-                }
-                
-            }
-        }
-        texture.Apply();
-    }
-
-    public void DrawPerimiter()
-    {
-        foreach(Vector2Int pixel in perimeter){
-            texture.SetPixel(pixel.x,pixel.y, new Color(0f, 0.1f, 0.8f, 1f));
-        }
-        texture.Apply();
-        //0.01.08
-    }
-    
     public void ChangeFlag()
     {
         flagDoStep = true;
@@ -293,54 +257,43 @@ public class DrawTest : MonoBehaviour
 
     public void DoStep()
     {
-        Debug.Log(flagDoStep);
-        //if (flagDoStep==false)
-        //{
-        //    Debug.Log("Nah");
-        //    return;
-        //}
-        //Debug.Log("Yahh");
+        int activePixel = 0;
+         Debug.Log(flagDoStep);
+        
+     
         for (int y = 1; y < texture.height-1; y++)
         {
 
 
             for (int x = 1; x < texture.width-1; x++)
             {
-                if (referenceMap[x,y] == 0)
+                Pixel central = pixels[x, y];
+                if (referenceMap[x,y] == 0 || central.flagIgnore)
                 {
                     continue;
                 }
-                if (pixels[x, y].infectedPop > 0)
+               
+                if (central.infectedPop > 0)
                 {
-                    //pixels[x, y].infectedPop *= 1.1f;
-                    //if (pixels[x, y].infectedPop > 1)
-                    //{
-                    //    pixels[x, y].infectedPop = 1;
-                    //}
-                    //pixels[x, y].infectedPop2 = pixels[x, y].infectedPop;
-
-
-                    //if (pixels[x, y].infectedPop < 0.4f)       //weak pixel can not infect
-                    //{
-                    //    continue;
-                    //}
+                    activePixel++;
                     int limit = 1;
-                    pixels[x, y].infectedPop *= Random.Range(1.1f, 2f);
-                    if (pixels[x, y].infectedPop > 0.8f)
+                    central.infectedPop *= Random.Range(1.1f, 2f);
+                    if (central.infectedPop > 0.8f)
                     {
                          limit += 2;
                     }
-                    else if (pixels[x, y].infectedPop > 0.4f)
+                    else if (central.infectedPop > 0.4f)
                     {
                         limit++;
                     }
                   
                     float maxDistance = new Vector2(limit, limit).magnitude;
-                   
+                    int countNonInfected = 0;
                     for (int dy = -limit; dy <= limit; dy++)
                     {
                         for (int dx = -limit; dx <= limit; dx++)
                         {
+                            Pixel limitPixel = pixels[x + dx, y + dy];
                             if (dy == 0 && dx == 0 )
                             {
                              
@@ -348,42 +301,40 @@ public class DrawTest : MonoBehaviour
                             }
                             else
                             {
+                                
                                 float ranges = new Vector2(dx, dy).magnitude;
 
-                               // float maxSquared = maxDistance * maxDistance;
-                               // float distSqared = ranges * ranges * ranges;
-                           
-                                if (pixels[x + dx, y + dy].infectedPop2 < pixels[x+dx,y+dy].maxPop)
+                                if (limitPixel.infectedPop2 < limitPixel.maxPop)
                                 {
-                                    pixels[x + dx, y + dy].infectedPop2 += (Random.Range(0, pixels[x, y].infectedPop / 10) / ranges);
 
-                                    if (pixels[x + dx ,y + dy].infectedPop2 > pixels[x + dx, y + dy].maxPop)
+                                    limitPixel.infectedPop2 += (Random.Range(0, central.infectedPop / 10) / ranges);
+
+                                    if (limitPixel.infectedPop2 > limitPixel.maxPop)
                                     {
-                                        pixels[x + dx, y + dy].infectedPop2 = pixels[x + dx, y + dy].maxPop;
+                                        limitPixel.infectedPop2 = limitPixel.maxPop;
+                                    }
+                                    else
+                                    {
+                                        countNonInfected++;
                                     }
                                 }
-                                
-                               
+
                             }
                         }
-                    } 
-
+                    }
+                    if (countNonInfected==0)
+                    {
+                        central.flagIgnore = true;
+                    }
 
                 }
 
                 // RGBA(0.667, 0.855, 1.000, 1.000) water color (google maps)
-                /* //float values = 0.8f / distSqared;   // 1, 1.4, 2, 2.23, 2.8
 
-                              //
-                              //value += values * invasionMassive[x, y];
-
-                              //if (value > 1.0) {
-                              //    value = 1.0f;
-                              //}
-                              //value *= 1f - (depthMap[x + dx, y + dy] / maxDepth)*0.9f ; *///
             }
 
         }
+      //  Debug.Log("ActivePixels:  "+activePixel);
         
     }
 
@@ -451,45 +402,19 @@ public class DrawTest : MonoBehaviour
         }
         Debug.Log(perimeter.Count);
     }
-
-    public void DrawInvasion()
+   public void GetMouseCoordinates()
     {
-        for (int y = 0; y < texture.height; y++)
+        if (Input.GetMouseButtonDown(0))
         {
-
-
-            for (int x = 0; x < texture.width; x++)
-            {
-
-                if (referenceMap[x,y] == 0)
-                {
-                    continue;
-                }
-                if (pixels[x, y].infectedPop2  < 0.1f)
-                {
-                    texture.SetPixel(x, y, new Color(0.2f, 0.5f, 1 - pixels[x, y].maxPop/*depth / maxDepth*/, 1f));
-                }
-                else
-                {
-                    Color color = Color.HSVToRGB (0.9f, 0f, 1.0f);
-                    color.a = 1-pixels[x, y].infectedPop2;
-                    color.r = pixels[x, y].infectedPop;
-                    color.g = pixels[x, y].maxPop;
-                    texture.SetPixel(x, y, color);
-                }
-                
-                    pixels[x, y].infectedPop = pixels[x, y].infectedPop2;
-                
-                
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Vector3 point = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            //Debug.Log(point);
+            Vector2Int mapCoordinates = new Vector2Int((int)(  point.x + 10)*90, (int)((  point.y + 5)*130));
+            pixels[mapCoordinates.x, mapCoordinates.y].infectedPop = 1;
+            Debug.Log(mapCoordinates);
             
-                
-
-                // RGBA(0.667, 0.855, 1.000, 1.000) water color (google maps)
-
-
-            }
         }
-        texture.Apply();
+        
     }
     void CalcNoise()
     {
@@ -522,7 +447,9 @@ public class DrawTest : MonoBehaviour
             DoStep();
 
         }
+        
         DrawInvasion();
+        GetMouseCoordinates();
 
         // DrawDepthMap();
 

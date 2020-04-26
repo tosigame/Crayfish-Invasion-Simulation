@@ -93,6 +93,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01c1e9fbe0d22104aba47cccabc8768a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Map: {fileID: 6614998866434457607}
   depthMapFile: 
   texture: {fileID: 0}
   referenceTexture: {fileID: 2800000, guid: b2511c2a8295d9c4ba5a219c4e242711, type: 3}
