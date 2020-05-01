@@ -10,15 +10,15 @@ public partial class DrawTest : MonoBehaviour
 {
     public class Pixel
     {
-      public float depth;
-      public  float maxPop;
-      public float infectedPop;
-      public  float infectedPop2;
+        public float depth;
+        public  float maxPop;
+        public float infectedPop;
+        public  float infectedPop2;
         public bool flagIgnore = false;
     }
     public Pixel[,] pixels;
     public string depthMapFile;
-     public Texture2D texture;
+    public Texture2D texture;
     public Texture2D referenceTexture;
     public Texture2D textureMask;
     private Vector2 invasionStart = new Vector2(900f,900f);
@@ -30,21 +30,38 @@ public partial class DrawTest : MonoBehaviour
     public float scale = 100F;
     protected bool flagDoStep = false;
 
-   
+    //1251. 632
+
     void Start()
     {
-       
         
+        Debug.Log(Camera.main.orthographicSize);
+        Debug.Log(Camera.main.pixelWidth);
+        Debug.Log(Camera.main.pixelHeight);
         depthMapFile = "F:/Проекты/юнидестонин свитамином С/Crayfish Invasion Simulation" + "/depthMap";
         texture = Instantiate(referenceTexture);
-      
-        Sprite sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),Vector2.zero);
+        float propotionalityx = (float)texture.width / (float)Camera.main.pixelWidth;
+        float propotionalityy = (float)texture.height / (float)Camera.main.pixelHeight;
+        //if (propotionalityx < propotionalityy)
+        //{
+        //    transform.localScale *= propotionalityx;
+        //}
+        //else
+        //{
+        //    transform.localScale *= propotionalityy;
+        //}
+        Debug.Log(propotionalityx);
+        Debug.Log(propotionalityy);
+
+        Sprite sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(0.5f,0.5f));
+       
         GetComponent<SpriteRenderer>().sprite = sprite;
         Color pixel;
       
         referenceMap = new int[texture.width, texture.height];
         pixels = new Pixel[texture.width, texture.height];
-      
+        Debug.Log("width " + texture.width + " height" + texture.height);
+       
         for (int y = 0; y < texture.height; y++)
         {
 
@@ -221,6 +238,8 @@ public partial class DrawTest : MonoBehaviour
     }
     int x1 = 0;
     int y1 = 0;
+    private object sr;
+
     public void  FillDepthMap()
     {
         Debug.Log("Dirty code");
@@ -408,13 +427,21 @@ public partial class DrawTest : MonoBehaviour
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             Vector3 point = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            //Debug.Log(point);
-            Vector2Int mapCoordinates = new Vector2Int((int)(  point.x + 10)*90, (int)((  point.y + 5)*130));
+            Debug.Log(point);
+            Vector2Int mapCoordinates = new Vector2Int((int)((point.x + 7.96f) * (texture.width / 15.92f)), (int)((point.y + 4.35f) * (texture.height / 8.7)));
             pixels[mapCoordinates.x, mapCoordinates.y].infectedPop = 1;
             Debug.Log(mapCoordinates);
             
         }
         
+    }
+    public Vector2Int GetMouseCoordinatesTest()
+    {
+        
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Vector3 point = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2Int mapCoordinates = new Vector2Int((int)((point.x + 7.96f) * (texture.width /15.92f)), (int)((point.y + 5) * (texture.height / 10)));
+        return mapCoordinates;
     }
     void CalcNoise()
     {
@@ -450,7 +477,9 @@ public partial class DrawTest : MonoBehaviour
         
         DrawInvasion();
         GetMouseCoordinates();
-
+        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            mousePosition.z = 0;
+        GameObject.Find("Circle").transform.position=mousePosition;
         // DrawDepthMap();
 
     }
