@@ -25,8 +25,8 @@ public partial class DrawTest : MonoBehaviour
     public float maxDepth = 0;
     public int[,] referenceMap;
     public List<Vector2Int> perimeter;
-    public float xOrg=1000;
-    public float yOrg=900;
+    public float xOrg=297;
+    public float yOrg=380;
     public float scale = 100F;
     protected bool flagDoStep = false;
 
@@ -139,15 +139,15 @@ public partial class DrawTest : MonoBehaviour
                 {
                     pixels[x, y].maxPop = Random.Range(0.6f, 0.8f);
                 }
-                else if (pixels[x, y].depth > 2 && pixels[x, y].depth <= 5)
+                else if (pixels[x, y].depth > 2 && pixels[x, y].depth <= 2.5f)
                 {
                     pixels[x, y].maxPop = Random.Range(0.9f, 1f);
                 }
-                else if (pixels[x, y].depth > 5 && pixels[x, y].depth <= 15)
+                else if (pixels[x, y].depth > 2.5f && pixels[x, y].depth <= 7.5f)
                 {
                     pixels[x, y].maxPop = Random.Range(0.3f, 0.4f);
                 }
-                else if (pixels[x, y].depth > 15 && pixels[x, y].depth <= 30)
+                else if (pixels[x, y].depth > 7.5f && pixels[x, y].depth <= 20)
                 {
                     pixels[x, y].maxPop = Random.Range(0.2f, 0.3f);
                 }
@@ -453,16 +453,42 @@ public partial class DrawTest : MonoBehaviour
             float x = 0.0F;
             while (x < texture.width)
             {
-                float xCoord = xOrg + x / texture.width * scale;
-                float yCoord = yOrg + y / texture.height * scale;
-                float sample = Mathf.PerlinNoise(xCoord, yCoord);
-                 pixels[(int)x,(int) y].depth *= sample;
-               // pix[(int)y * texture.width + (int)x] = new Color(sample, sample, sample);
+                if (pixels[(int)x, (int)y].depth < 41)
+                {
+                    float DepthCoeff = 1;
+                    if (pixels[(int)x, (int)y].depth > 29)
+                    {
+                        DepthCoeff = (40f - pixels[(int)x, (int)y].depth)/10f;
+                    }
+                        
+
+                    float xCoord = xOrg + x / texture.width * scale;
+                    float yCoord = yOrg + y / texture.height * scale;
+                    float sample = Mathf.PerlinNoise(xCoord, yCoord);
+                    pixels[(int)x, (int)y].depth *= sample*DepthCoeff;
+                    // pix[(int)y * texture.width + (int)x] = new Color(sample, sample, sample);
+                    
+                }
                 x++;
             }
             y++;
         }
+         y = 0.0F;
 
+        while (y < texture.height)
+        {
+            float x = 0.0F;
+            while (x < texture.width)
+            {
+                float xCoord = xOrg + x / texture.width * scale/10.1f;
+                float yCoord = yOrg + y / texture.height * scale/19.3f;
+                float sample = Mathf.PerlinNoise(xCoord, yCoord);
+                pixels[(int)x, (int)y].depth *= sample;
+                // pix[(int)y * texture.width + (int)x] = new Color(sample, sample, sample);
+                x++;
+            }
+            y++;
+        }
         //// Copy the pixel data to the texture and load it into the GPU.
         //noiseTex.SetPixels(pix);
         //noiseTex.Apply();

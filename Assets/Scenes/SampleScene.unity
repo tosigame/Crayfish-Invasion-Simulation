@@ -192,6 +192,16 @@ PrefabInstance:
       propertyPath: flagDoStep
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -6537147568684796608, guid: e970d882e1c9acf488edd8e20dd766df,
+        type: 3}
+      propertyPath: xOrg
+      value: 297
+      objectReference: {fileID: 0}
+    - target: {fileID: -6537147568684796608, guid: e970d882e1c9acf488edd8e20dd766df,
+        type: 3}
+      propertyPath: yOrg
+      value: 380
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e970d882e1c9acf488edd8e20dd766df, type: 3}
 --- !u!1 &697158121
